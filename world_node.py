@@ -58,14 +58,15 @@ class WorldNode(Node):
         if self.need_new_garbage:
             self.garbage_x = random.randint(0, self.n - 1)
             self.garbage_y = random.randint(0, self.n - 1)
-            
-            msg = GarbagePosition()
-            msg.x = int(self.garbage_x)
-            msg.y = int(self.garbage_y)
-            self.garb_pub.publish(msg)
-            
             self.need_new_garbage = False
             self.get_logger().info(f"New garbage spawned at ({self.garbage_x}, {self.garbage_y})")
+            
+        msg = GarbagePosition()
+        msg.x = int(self.garbage_x)
+        msg.y = int(self.garbage_y)
+        self.garb_pub.publish(msg)
+            
+
         
         # 1. Update Robot Position based on current direction
         if self.current_direction == 'N':
@@ -123,6 +124,7 @@ class WorldNode(Node):
 
  
         current_robot_location = (self.robot_x, self.robot_y)
+        #guard to prevent double counting if robot calls pickup multiple times at same location
         if self.last_pickup_location == current_robot_location:
             response.success = True
             return response
@@ -154,7 +156,7 @@ class WorldNode(Node):
             # CASE B: Normal Pickup
             self.get_logger().info(f"SUCCESS! Trash collected. ({self.pickups_done}/{self.total_pickups})")
             
-
+            self.current_direction = None 
             self.need_new_garbage = True
             
             response.success = True
